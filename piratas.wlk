@@ -1,53 +1,35 @@
 class Pirata {
-	var energiaInicial
-	var property poderPelea = 0
-	var vitalidad = 0
-	var property inteligencia = 0
-	var property moral = 0
+	var property energiaInicial
 	method poderMando()
 	method esFuerte() = self.poderMando() > 100
 	method tomarRon() {
 		energiaInicial -= 50
 	}
-	method disminuirAtributos()
-	method desolar()
-	method energiaInicialMenorA20() = energiaInicial < 20
+	//method serHerido() Porque las subclases la implementan de forma distinta
 }
 
 class Guerrero inherits Pirata {
-	//var energiaInicial
-	//var poderPelea
-	//var vitalidad
+	var poderPelea
+	var vitalidad
 	override method poderMando() = poderPelea * vitalidad
-	override method disminuirAtributos() {
+	method serHerido() {
 		poderPelea /= 2
-	}
-	override method desolar() {
-		self.poderPelea(0)
 	}
 }
 
 class Navegador inherits Pirata{
-	//var energiaInicial
-	//var inteligencia
+	var inteligencia
 	override method poderMando() = inteligencia ** 2
-	override method disminuirAtributos() {
+	method serHerido() {
 		inteligencia /= 2
-	}
-	override method desolar() {
-		self.inteligencia(0)
 	}
 }
 
 class Cocinero inherits Pirata {
-	//var energiaInicial
 	var ingredientes = [] 
-	//var moral
-	override method disminuirAtributos() {
+	var moral
+	method serHerido() {
 		moral /= 2
-	}
-	override method desolar() {
-		self.moral(0)
 	}
 	method agregarIngrediente(ingrediente) {
 		ingredientes.add(ingrediente)
@@ -66,16 +48,12 @@ class Cocinero inherits Pirata {
 
 object jackSparrow inherits Pirata {
 	//energiaInicial = 500
-	//poderPelea = 200
-	//inteligencia = 300
+	var poderPelea = 200
+	var inteligencia = 300
 	var ingredientes = ["botellaRon"]
-	override method disminuirAtributos(){
+	method serHerido(){
 		poderPelea /= 2
 		inteligencia /= 2
-	}
-	override method desolar(){
-		poderPelea = 0
-		inteligencia = 0
 	}
 	method agregarIngrediente(ingrediente){
 		ingredientes.add(ingrediente)
@@ -99,6 +77,12 @@ class Barco {
 	
 	method disminuirResistencia(disminucion){
 		resistencia = 0.max(resistencia-disminucion)
+	}
+	
+	method desolar() {
+		resistencia = 0
+		poderFuego = 0
+		municiones = 0
 	}
 	
 	method disminuirMunicion(disminucion){
@@ -129,7 +113,7 @@ class Barco {
 	}
 	
 	method perderTripulacion(){
-		tripulacion.removeAllSuchThat({tripulante => tripulante.energiaInicialMenorA20()})
+		tripulacion.removeAllSuchThat({tripulante => tripulante.energiaInicial()<20})
 	}
 	
 	method disminuirPoderPelea() {
@@ -144,8 +128,8 @@ class Barco {
 		tripulacion.addAll(tripulacion)
 	}
 	
-	method desolar() {
-		tripulacion.forEach({tripulante => tripulante.desolar()})
+	method tripulacionHerida() {
+		tripulacion.forEach({tripulante => tripulante.serHerido()})
 	}
 	
 	method engrentarA(enemigo) {
@@ -153,8 +137,8 @@ class Barco {
 		{
 			self.agregarTripulantesEnemigos(enemigo)
 			enemigo.perderTripulacionTotalmente()
-			self.disminuirPoderPelea()	
-			self.desolar()
+			enemigo.tripulacionHerida()
+			enemigo.desolar()
 		}		
 	}	
 	
@@ -165,12 +149,25 @@ class Barco {
 		enemigo.disminuirResistencia(50*canionazos)
 	}
 	
-	method recibirBonus(){
-		if(bando == "armadaInglesa")
-			self.aumentarMunicion(0.3)
-		if(bando == "unionPirata")
-			self.aumentarPoderFuego(60)
-		if(bando == "armadaHolandes")
-			self.duplicarTripulacion()
+	method aplicarBonus(){
+		bando.aplicarBonus(self)
+	}
+}
+
+object armadaInglesa {
+	method aplicarBonus(barco){
+		barco.aumentarMunicion(0.3)
+	}
+}
+
+object unionPirata {
+	method aplicarBonus(barco){
+		barco.aumentarPoderFuego(60)
+	}		
+}
+
+object armadaHolandes {
+	method aplicarBonus(barco){
+		barco.duplicarTripulacion()
 	}
 }
